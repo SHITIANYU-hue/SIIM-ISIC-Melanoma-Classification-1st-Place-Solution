@@ -16,8 +16,8 @@ from torch.optim import lr_scheduler
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from util import GradualWarmupSchedulerV2
-import apex
-from apex import amp
+# import apex
+# from apex import amp
 from dataset import get_df, get_transforms, MelanomaDataset
 from models import Effnet_Melanoma, Resnest_Melanoma, Seresnext_Melanoma
 
@@ -29,10 +29,10 @@ def parse_args():
     parser.add_argument('--data-folder', type=int, required=True)
     parser.add_argument('--image-size', type=int, required=True)
     parser.add_argument('--enet-type', type=str, required=True)
-    parser.add_argument('--batch-size', type=int, default=64)
-    parser.add_argument('--num-workers', type=int, default=32)
+    parser.add_argument('--batch-size', type=int, default=8)
+    parser.add_argument('--num-workers', type=int, default=16)
     parser.add_argument('--init-lr', type=float, default=3e-5)
-    parser.add_argument('--out-dim', type=int, default=9)
+    parser.add_argument('--out-dim', type=int, default=4) ## 4 or 9
     parser.add_argument('--n-epochs', type=int, default=15)
     parser.add_argument('--use-amp', action='store_true')
     parser.add_argument('--use-meta', action='store_true')
@@ -155,7 +155,8 @@ def val_epoch(model, loader, mel_idx, is_ext=None, n_test=1, get_output=False):
     else:
         acc = (PROBS.argmax(1) == TARGETS).mean() * 100.
         auc = roc_auc_score((TARGETS == mel_idx).astype(float), PROBS[:, mel_idx])
-        auc_20 = roc_auc_score((TARGETS[is_ext == 0] == mel_idx).astype(float), PROBS[is_ext == 0, mel_idx])
+        auc_20=0
+        # auc_20 = roc_auc_score((TARGETS[is_ext == 0] == mel_idx).astype(float), PROBS[is_ext == 0, mel_idx])
         return val_loss, acc, auc, auc_20
 
 
@@ -171,8 +172,8 @@ def run(fold, df, meta_features, n_meta_features, transforms_train, transforms_v
 
     dataset_train = MelanomaDataset(df_train, 'train', meta_features, transform=transforms_train)
     dataset_valid = MelanomaDataset(df_valid, 'valid', meta_features, transform=transforms_val)
-    train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, sampler=RandomSampler(dataset_train), num_workers=args.num_workers)
-    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=args.batch_size, num_workers=args.num_workers)
+    train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=args.batch_size, sampler=RandomSampler(dataset_train), num_workers=args.num_workers,drop_last=True)
+    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=args.batch_size, num_workers=args.num_workers,drop_last=True)
 
     model = ModelClass(
         args.enet_type,
@@ -262,7 +263,8 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError()
 
-    DP = len(os.environ['CUDA_VISIBLE_DEVICES']) > 1
+    # DP = len(os.environ['CUDA_VISIBLE_DEVICES']) > 1
+    DP=0
 
     set_seed()
 

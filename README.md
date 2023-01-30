@@ -46,6 +46,8 @@ Training commands of the 18 models. Training time for a single model ranges from
 After training, models will be saved in `./weights/` Tranning logs will be saved in `./logs/`
 
 ```
+python train.py --kernel-type 9c_meta_b3_768_512_ext_18ep --data-dir ./data/ --data-folder 768 --image-size 512 --enet-type efficientnet_b3 --use-meta --n-epochs 2  --CUDA_VISIBLE_DEVICES 0
+
 python train.py --kernel-type 9c_meta_b3_768_512_ext_18ep --data-dir ./data/ --data-folder 768 --image-size 512 --enet-type efficientnet_b3 --use-meta --n-epochs 18 --use-amp --CUDA_VISIBLE_DEVICES 0,1
 
 python train.py --kernel-type 9c_b4ns_2e_896_ext_15ep --data-dir ./data/ --data-folder 1024 --image-size 896 --enet-type tf_efficientnet_b4_ns --use-amp --init-lr 2e-5 --CUDA_VISIBLE_DEVICES 0,1,2,3,4,5

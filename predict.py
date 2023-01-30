@@ -18,8 +18,8 @@ from torch.optim import lr_scheduler
 from torch.utils.data.sampler import RandomSampler, SequentialSampler
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from util import GradualWarmupSchedulerV2
-import apex
-from apex import amp
+# import apex
+# from apex import amp
 from dataset import get_df, get_transforms, MelanomaDataset
 from models import Effnet_Melanoma, Resnest_Melanoma, Seresnext_Melanoma
 from train import get_trans
@@ -32,9 +32,9 @@ def parse_args():
     parser.add_argument('--data-folder', type=int, required=True)
     parser.add_argument('--image-size', type=int, required=True)
     parser.add_argument('--enet-type', type=str, required=True)
-    parser.add_argument('--batch-size', type=int, default=64)
+    parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--num-workers', type=int, default=32)
-    parser.add_argument('--out-dim', type=int, default=9)
+    parser.add_argument('--out-dim', type=int, default=4)
     parser.add_argument('--use-amp', action='store_true')
     parser.add_argument('--use-meta', action='store_true')
     parser.add_argument('--DEBUG', action='store_true')
@@ -72,8 +72,7 @@ def main():
     for fold in range(5):
 
         if args.eval == 'best':
-            model_file = 
-            os.path.join(args.model_dir, f'{args.kernel_type}_best_fold{fold}.pth')
+            model_file = os.path.join(args.model_dir, f'{args.kernel_type}_best_fold{fold}.pth')
         elif args.eval == 'best_20':
             model_file = os.path.join(args.model_dir, f'{args.kernel_type}_best_20_fold{fold}.pth')
         if args.eval == 'final':
