@@ -102,6 +102,9 @@ if __name__ == '__main__':
         kernel_type='9c_meta_b3_768_512_ext_18ep',
         out_dim=4,
         data_dir='./data/',
+
+
+
         data_folder=768,
         use_meta=False,
     )
@@ -116,23 +119,27 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
 
     for fold in folds:
-        train_loader, valid_loader=run(fold, df, meta_features, n_meta_features, transforms_train, transforms_val, mel_idx)
-        for epoch in range(num_epochs):
-            print('epoch',epoch)
-            for idx, data in enumerate(tqdm(train_loader), 0):
-                imgs, _ = data
-                imgs = imgs.to(device)
-                # Feeding a batch of images into the network to obtain the output image, mu, and logVar
-                out, mu, logVar = net(imgs)
-                # The loss is the BCE loss combined with the KL divergence to ensure the distribution is learnt
-                kl_divergence = 0.5 * torch.sum(-1 - logVar + mu.pow(2) + logVar.exp())
-                imgs_=F.interpolate(imgs, size=(32, 32), mode='bilinear', align_corners=False)
-                loss = F.binary_cross_entropy(out, imgs_, size_average=False) + kl_divergence
+        print('fold',fold)
+        if fold==0:
+            train_loader, valid_loader=run(fold, df, meta_features, n_meta_features, transforms_train, transforms_val, mel_idx)
+            for epoch in range(num_epochs):
+                print('epoch',epoch)
+                for idx, data in enumerate(tqdm(train_loader), 0):
+                    imgs, _ = data
+                    imgs = imgs.to(device)
+                    # Feeding a batch of images into the network to obtain the output image, mu, and logVar
+                    out, mu, logVar = net(imgs)
+                    # The loss is the BCE loss combined with the KL divergence to ensure the distribution is learnt
+                    kl_divergence = 0.5 * torch.sum(-1 - logVar + mu.pow(2) + logVar.exp())
+                    print('kl diver',kl_divergence)
+                    imgs_=F.interpolate(imgs, size=(32, 32), mode='bilinear', align_corners=False)
+                    loss = F.binary_cross_entropy_with_logits(out, imgs_, size_average=True) + kl_divergence
+                    print('loss',loss)
 
-                # Backpropagation based on the loss
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                    # Backpropagation based on the loss
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
 
-            print('Fold{}: Epoch {}: Loss {}'.format(fold, epoch, loss))
-        torch.save(net.state_dict(),'weights/vae{epoch}_{fold}.pt')
+                print('Fold{}: Epoch {}: Loss {}'.format(fold, epoch, loss))
+                torch.save(net.state_dict(),f'weights/vae{epoch}_{fold}.pt')
